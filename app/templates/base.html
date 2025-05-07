@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>TasteBook</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Кастомные стили -->
+    <style>
+        body {
+            background-color: #fffaf0;
+            font-family: 'Nunito', sans-serif;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+    
+        .btn {
+            background-color: #f78c1f !important;
+            border-color: #f78c1f !important;
+            color: white !important;
+        }
+    
+        .btn:hover {
+            background-color: #e67300 !important;
+            border-color: #e67300 !important;
+            color: white !important;
+        }
+    
+        .btn-outline-primary,
+        .btn-outline-secondary,
+        .btn-primary,
+        .btn-secondary,
+        .btn-success,
+        .btn-danger {
+            background-color: #f78c1f !important;
+            border-color: #f78c1f !important;
+            color: white !important;
+        }
+    
+        .btn-outline-primary:hover,
+        .btn-outline-secondary:hover,
+        .btn-primary:hover,
+        .btn-secondary:hover,
+        .btn-success:hover,
+        .btn-danger:hover {
+            background-color: #e67300 !important;
+            border-color: #e67300 !important;
+
+        h1, h2, h3, h4 {
+            color: #c65100;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 17px;
+            color: #444;
+        }
+
+        a {
+            color: #f78c1f;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #e67300;
+            text-decoration: underline;
+        }
+
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <!-- Навбар -->
+    <nav class="navbar navbar-expand-lg shadow-sm sticky-top" style="background-color: #f78c1f;">
+        <div class="container-fluid">
+          <a class="navbar-brand text-white fw-bold" href="{{ url_for('main.home') }}">TasteBook</a>
+          
+          <!-- Бургер-кнопка -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+      
+          <!-- Основное содержимое -->
+          <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ms-auto align-items-center">
+              {% if session.get('user_id') and current_user %}
+                <li class="nav-item">
+                  <a class="nav-link text-white" href="{{ url_for('auth.profile') }}">
+                    👤 {{ current_user.username }}
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link text-white" href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                  <a class="nav-link text-white" href="{{ url_for('auth.login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link text-white" href="{{ url_for('auth.register') }}">Create acc</a>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+    <!-- Flash-сообщения -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info" id="flash-msg">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Контент -->
+    <div class="container py-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+
+    <script>
+        setTimeout(() => {
+            const msg = document.getElementById('flash-msg');
+            if (msg) {
+                msg.style.transition = "opacity 0.5s";
+                msg.style.opacity = 0;
+                setTimeout(() => msg.remove(), 500);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

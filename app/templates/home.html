@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center my-4">
+    <h1 class="fw-bold" style="color: #c65100;">Welcome to the recipe site!</h1>
+    <p class="lead">Here you will find delicious dishes for every taste.</p>
+</div>
+
+<!-- Поисковая форма -->
+<form method="GET" action="{{ url_for('main.home') }}" class="row justify-content-center mb-4" id="search-form">
+    <div class="col-md-4">
+        <input type="text" name="q" class="form-control" placeholder="Search for recipes.." value="{{ request.args.get('q', '') }}" id="live-search">
+    </div>
+    <div class="col-md-3">
+        <select name="category" class="form-select" id="category-select">
+            <option value="">Все категории</option>
+            <option value="Славянская">Славянская</option>
+            <option value="Итальянская">Итальянская</option>
+            <option value="Тайская">Тайская</option>
+            <option value="Мексиканская">Мексиканская</option>
+            <option value="Узбекская">Узбекская</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">search</button>
+    </div>
+    {% if session.get('user_id') %}
+    <div class="col-md-2 mt-2 mt-md-0">
+        <a href="{{ url_for('main.add_recipe') }}" class="btn btn-success w-100">+ Добавить рецепт</a>
+    </div>
+    {% endif %}
+</form>
+
+<!-- Блок рецептов -->
+<div id="recipe-list">
+    {% include 'partials/recipe_cards.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("live-search");
+    const categorySelect = document.getElementById("category-select");
+    const container = document.getElementById("recipe-list");
+
+    let timeout = null;
+
+    function fetchResults() {
+        const q = searchInput.value;
+        const category = categorySelect.value;
+
+        fetch(`/search?q=${encodeURIComponent(q)}&category=${encodeURIComponent(category)}`)
+            .then(res => res.json())
+            .then(data => {
+                container.innerHTML = data.html;
+            });
+    }
+
+});
+</script>
+{% endblock %}

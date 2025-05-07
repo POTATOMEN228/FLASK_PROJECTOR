@@ -1,0 +1,25 @@
+<div class="row">
+    {% for recipe in recipes %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <img src="{{ url_for('static', filename='images/' + recipe.image) }}"
+             class="card-img-top"
+             style="height: 200px; object-fit: cover;"
+             alt="Фото рецепта">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ recipe.title }}</h5>
+          <p class="card-text">{{ recipe.short_description }}</p>
+          <p class="text-muted"><small>{{ recipe.category }}</small></p>
+          {% if recipe.is_default %}
+          <a href="{{ url_for('main.default_recipe', title=recipe.title|replace(' ', '_')) }}" class="btn btn-primary mt-auto">Read more</a>
+          {% else %}
+          <a href="{{ url_for('main.view_recipe', recipe_id=recipe.id) }}" class="btn btn-primary mt-auto">Read more</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p>Nothing found.</p>
+    {% endfor %}
+  </div>
+  
