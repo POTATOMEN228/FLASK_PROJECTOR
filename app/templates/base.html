@@ -5,11 +5,9 @@
     <title>TasteBook</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Кастомные стили -->
     <style>
         body {
             background-color: #fffaf0;
@@ -79,18 +77,18 @@
     </style>
 </head>
 <body>
-    <!-- Навбар -->
+
     <nav class="navbar navbar-expand-lg shadow-sm sticky-top" style="background-color: #f78c1f;">
         <div class="container-fluid">
           <a class="navbar-brand text-white fw-bold" href="{{ url_for('main.home') }}">TasteBook</a>
           
-          <!-- Бургер-кнопка -->
+
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
             aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
       
-          <!-- Основное содержимое -->
+
           <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto align-items-center">
               {% if session.get('user_id') and current_user %}
@@ -115,7 +113,7 @@
         </div>
       </nav>
 
-    <!-- Flash-сообщения -->
+
     <div class="container mt-3">
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -126,12 +124,12 @@
         {% endwith %}
     </div>
 
-    <!-- Контент -->
+
     <div class="container py-4">
         {% block content %}{% endblock %}
     </div>
 
-    <!-- JS -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
 

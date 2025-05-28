@@ -8,7 +8,6 @@ from flask import jsonify, render_template_string
 
 main_bp = Blueprint('main', __name__)
 
-# Встроенные рецепты
 DEFAULT_RECIPES = [
     {
         'id': 0,
@@ -58,7 +57,6 @@ DEFAULT_RECIPES = [
 
 ]
 
-# Главная страница
 @main_bp.route('/')
 def home():
     search = request.args.get('q', '').strip().lower()
@@ -73,7 +71,6 @@ def home():
 
     user_recipes = query.order_by(Recipe.id.desc()).all()
 
-    #Фильтрация дефолтных вручную
     filtered_defaults = []
     for r in DEFAULT_RECIPES:
         match_title = not search or search in r['title'].lower()
@@ -84,7 +81,7 @@ def home():
     recipes = filtered_defaults + user_recipes
     return render_template('home.html', recipes=recipes)
 
-# Добавить рецепт
+
 @main_bp.route('/add-recipe', methods=['GET', 'POST'])
 def add_recipe():
     if 'user_id' not in session:
@@ -114,13 +111,11 @@ def add_recipe():
 
     return render_template('add_recipe.html', form=form)
 
-# Просмотр пользовательского рецепта
 @main_bp.route('/recipe/<int:recipe_id>')
 def view_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     return render_template('view_recipe.html', recipe=recipe)
 
-# Просмотр встроенного рецепта
 @main_bp.route('/default/<title>')
 def default_recipe(title):
     name = title.replace('_', ' ')
@@ -131,7 +126,7 @@ def default_recipe(title):
 
     return render_template('view_recipe.html', recipe=recipe)
 
-# Редактирование рецепта
+
 @main_bp.route('/edit-recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def edit_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -159,7 +154,7 @@ def edit_recipe(recipe_id):
 
     return render_template('edit_recipe.html', form=form, recipe=recipe)
 
-# Удаление рецепта
+
 @main_bp.route('/delete-recipe/<int:recipe_id>', methods=['POST'])
 def delete_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -197,6 +192,6 @@ def live_search():
 
     recipes = filtered_defaults + user_recipes
 
-    # Рендерим карточки
+
     rendered = render_template('partials/recipe_cards.html', recipes=recipes)
     return jsonify({'html': rendered})
