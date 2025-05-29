@@ -16,5 +16,6 @@ class Recipe(db.Model):
     image = db.Column(db.String(100), default='default.jpg')
     category = db.Column(db.String(50))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_ai = db.Column(db.Boolean, default=False)
 
     user = db.relationship('User', backref='recipes')

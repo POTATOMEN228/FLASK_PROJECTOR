@@ -1,10 +1,16 @@
 import os
+import openai
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from app.forms import RecipeForm
 from app import db
 from app.models import Recipe
 from flask import jsonify, render_template_string
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения (включая OPENAI_API_KEY)
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 main_bp = Blueprint('main', __name__)
 
@@ -28,33 +34,32 @@ DEFAULT_RECIPES = [
         'is_default': True
     },
     {
-    'id': -3,
-    'title': 'Том Ям',
-    'short_description': 'Острый тайский суп с креветками и кокосовым молоком.',
-    'instructions': '1. Варите бульон с лемонграссом.\n2. Добавьте грибы и креветки.\n3. Влейте кокосовое молоко.',
-    'category': 'Тайская',
-    'image': 'tom_yam.png',
-    'is_default': True
+        'id': -3,
+        'title': 'Том Ям',
+        'short_description': 'Острый тайский суп с креветками и кокосовым молоком.',
+        'instructions': '1. Варите бульон с лемонграссом.\n2. Добавьте грибы и креветки.\n3. Влейте кокосовое молоко.',
+        'category': 'Тайская',
+        'image': 'tom_yam.png',
+        'is_default': True
     },
     {
-    'id': -4,
-    'title': 'Пицца Маргарита',
-    'short_description': 'Классическая итальянская пицца с томатами и сыром моцарелла.',
-    'instructions': '1. Приготовьте тесто.\n2. Смажьте томатным соусом.\n3. Выложите сыр и запекайте.',
-    'category': 'Итальянская',
-    'image': 'pizza.png',
-    'is_default': True
+        'id': -4,
+        'title': 'Пицца Маргарита',
+        'short_description': 'Классическая итальянская пицца с томатами и сыром моцарелла.',
+        'instructions': '1. Приготовьте тесто.\n2. Смажьте томатным соусом.\n3. Выложите сыр и запекайте.',
+        'category': 'Итальянская',
+        'image': 'pizza.png',
+        'is_default': True
     },
     {
-    'id': -5,
-    'title': 'Шурпа',
-    'short_description': 'Наваристый суп из баранины с овощами.',
-    'instructions': '1. Отварите мясо.\n2. Добавьте картошку, морковь, лук.\n3. Варите до мягкости.',
-    'category': 'Узбекская',
-    'image': 'shurpa.png',
-    'is_default': True
+        'id': -5,
+        'title': 'Шурпа',
+        'short_description': 'Наваристый суп из баранины с овощами.',
+        'instructions': '1. Отварите мясо.\n2. Добавьте картошку, морковь, лук.\n3. Варите до мягкости.',
+        'category': 'Узбекская',
+        'image': 'shurpa.png',
+        'is_default': True
     }
-
 ]
 
 @main_bp.route('/')
@@ -80,7 +85,6 @@ def home():
 
     recipes = filtered_defaults + user_recipes
     return render_template('home.html', recipes=recipes)
-
 
 @main_bp.route('/add-recipe', methods=['GET', 'POST'])
 def add_recipe():
@@ -116,6 +120,61 @@ def view_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     return render_template('view_recipe.html', recipe=recipe)
 
+@main_bp.route('/ai-create', methods=['GET', 'POST'])
+def ai_create():
+    if request.method == 'POST':
+        ingredients = request.form['ingredients']
+        prompt = (
+            f"Придумай подробный рецепт из: {ingredients}. "
+            "Выведи:\nНазвание:\nКатегория:\nКраткое описание:\nПолный рецепт:"
+        )
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=700
+        )
+        result = response['choices'][0]['message']['content']
+        return render_template('ai_form.html', result=result, ingredients=ingredients)
+    return render_template('ai_form.html')
+
+@main_bp.route('/ai-publish', methods=['POST'])
+def ai_publish():
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    raw = request.form['generated']
+    lines = raw.strip().split('\n')
+
+    title = ""
+    category = "Без категории"
+    short_desc = ""
+    instructions = ""
+
+    for line in lines:
+        l = line.lower()
+        if l.startswith("название"):
+            title = line.split(":", 1)[1].strip()
+        elif l.startswith("категория"):
+            category = line.split(":", 1)[1].strip()
+        elif l.startswith("краткое описание"):
+            short_desc = line.split(":", 1)[1].strip()
+        else:
+            instructions += line + "\n"
+
+    recipe = Recipe(
+        title=title,
+        short_description=short_desc,
+        instructions=instructions,
+        category=category,
+        image="default.jpg",
+        user_id=session['user_id'],
+        is_ai=True
+    )
+    db.session.add(recipe)
+    db.session.commit()
+    flash('AI-рецепт опубликован!')
+    return redirect(url_for('main.home'))
+
 @main_bp.route('/default/<title>')
 def default_recipe(title):
     name = title.replace('_', ' ')
@@ -125,7 +184,6 @@ def default_recipe(title):
         return redirect(url_for('main.home'))
 
     return render_template('view_recipe.html', recipe=recipe)
-
 
 @main_bp.route('/edit-recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def edit_recipe(recipe_id):
@@ -154,7 +212,6 @@ def edit_recipe(recipe_id):
 
     return render_template('edit_recipe.html', form=form, recipe=recipe)
 
-
 @main_bp.route('/delete-recipe/<int:recipe_id>', methods=['POST'])
 def delete_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -173,7 +230,6 @@ def live_search():
     search = request.args.get('q', '').strip().lower()
     category = request.args.get('category')
 
-    # SQL
     query = Recipe.query
     if search:
         query = query.filter(Recipe.title.ilike(f'%{search}%'))
@@ -182,7 +238,6 @@ def live_search():
 
     user_recipes = query.order_by(Recipe.id.desc()).all()
 
-    # Фильтрация встроенных 
     filtered_defaults = []
     for r in DEFAULT_RECIPES:
         match_title = (not search or search in r['title'].lower())
@@ -191,7 +246,6 @@ def live_search():
             filtered_defaults.append(r)
 
     recipes = filtered_defaults + user_recipes
-
 
     rendered = render_template('partials/recipe_cards.html', recipes=recipes)
     return jsonify({'html': rendered})

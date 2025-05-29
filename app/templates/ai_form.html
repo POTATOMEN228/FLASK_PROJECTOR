@@ -1,0 +1,23 @@
+{% extends "base.html" %} 
+{% block content %}
+<h3>AI-генератор рецепта</h3>
+
+<form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <textarea name="ingredients" class="form-control" rows="2" placeholder="Например: картошка, яйцо, лук" required>{{ ingredients or '' }}</textarea>
+  <button class="btn btn-primary mt-2">Сгенерировать</button>
+</form>
+
+{% if result %}
+<hr>
+<form method="POST" action="{{ url_for('main.ai_publish') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="generated" value="{{ result }}">
+  <h5>Сгенерированный рецепт:</h5>
+  <pre class="bg-light p-3" style="white-space: pre-wrap;">{{ result }}</pre>
+  <button class="btn btn-success">Опубликовать</button>
+  <a href="{{ url_for('main.ai_create') }}" class="btn btn-secondary">Сгенерировать другое</a>
+  <a href="{{ url_for('main.home') }}" class="btn btn-outline-danger">Очистить</a>
+</form>
+{% endif %}
+{% endblock %}
