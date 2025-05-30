@@ -8,7 +8,7 @@ from app.models import Recipe
 from flask import jsonify, render_template_string
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения (включая OPENAI_API_KEY)
+#  переменные окружения включая OPENAI_API_KEY
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -62,6 +62,7 @@ DEFAULT_RECIPES = [
     }
 ]
 
+# Маршрут главной страницы (home)
 @main_bp.route('/')
 def home():
     search = request.args.get('q', '').strip().lower()
@@ -86,6 +87,7 @@ def home():
     recipes = filtered_defaults + user_recipes
     return render_template('home.html', recipes=recipes)
 
+# добавления рецепта
 @main_bp.route('/add-recipe', methods=['GET', 'POST'])
 def add_recipe():
     if 'user_id' not in session:
@@ -115,11 +117,13 @@ def add_recipe():
 
     return render_template('add_recipe.html', form=form)
 
+# просмотр одного рецепта
 @main_bp.route('/recipe/<int:recipe_id>')
 def view_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     return render_template('view_recipe.html', recipe=recipe)
 
+# генерация рецепта с помощью ИИ
 @main_bp.route('/ai-create', methods=['GET', 'POST'])
 def ai_create():
     if request.method == 'POST':
@@ -136,6 +140,7 @@ def ai_create():
         result = response['choices'][0]['message']['content']
         return render_template('ai_form.html', result=result, ingredients=ingredients)
     return render_template('ai_form.html')
+
 
 @main_bp.route('/ai-publish', methods=['POST'])
 def ai_publish():
@@ -172,9 +177,10 @@ def ai_publish():
     )
     db.session.add(recipe)
     db.session.commit()
-    flash('AI-рецепт опубликован!')
+    flash('AI recipe published!')
     return redirect(url_for('main.home'))
 
+# просмотр дефолтного рецепта
 @main_bp.route('/default/<title>')
 def default_recipe(title):
     name = title.replace('_', ' ')
@@ -185,6 +191,7 @@ def default_recipe(title):
 
     return render_template('view_recipe.html', recipe=recipe)
 
+#редактирование рецепта
 @main_bp.route('/edit-recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def edit_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -212,6 +219,7 @@ def edit_recipe(recipe_id):
 
     return render_template('edit_recipe.html', form=form, recipe=recipe)
 
+# удаления рецепта
 @main_bp.route('/delete-recipe/<int:recipe_id>', methods=['POST'])
 def delete_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -225,6 +233,7 @@ def delete_recipe(recipe_id):
     flash('Recipe removed.')
     return redirect(url_for('auth.profile'))
 
+# live-поиск (AJAX)
 @main_bp.route('/search')
 def live_search():
     search = request.args.get('q', '').strip().lower()
